@@ -28,7 +28,7 @@ blackjack_prog_1(char *host)
 	Hand *hand;
 
 #ifndef	DEBUG
-	clnt = clnt_create (host, BLACKJACK_PROG, BLACKJACK_VERS, "udp");
+	clnt = clnt_create (host, BLACKJACK_PROG, BLACKJACK_VERS, "netpath");
 	if (clnt == NULL) {
 		clnt_pcreateerror (host);
 		exit (1);
@@ -42,10 +42,10 @@ blackjack_prog_1(char *host)
 	}
   printf("Your initial cards: ");
   for (int i = 0; i < hand->player_count; i++) {
-    char *card_face = reflect[hand->player_cards[i]];
+    char *card_face = reflect[hand->player_cards[i]-1];
     printf("%s ", card_face);
   }
-  printf("\nDealer's cards: %s \? \n", reflect[hand->dealer_cards[0]]);
+  printf("\nDealer's cards: %s \? \n", reflect[hand->dealer_cards[0]-1]);
 
   char command;
   while (1) {
@@ -61,10 +61,10 @@ blackjack_prog_1(char *host)
             
       printf("Your cards: ");
       for (int i = 0; i < hand->player_count; i++) {
-        char *card_face = reflect[hand->player_cards[i]];
+        char *card_face = reflect[hand->player_cards[i]-1];
         printf("%s ", card_face);
         }
-      printf("\nDealer's cards: %s \? \n", reflect[hand->dealer_cards[0]]);
+      printf("\nDealer's cards: %s \? \n", reflect[hand->dealer_cards[0]-1]);
 
       // 检查是否爆牌
       Result value = *get_result_1(NULL, clnt);
@@ -81,12 +81,12 @@ blackjack_prog_1(char *host)
 	    }
       printf("Your final cards: ");
       for (int i = 0; i < hand->player_count; i++) {
-        char *card_face = reflect[hand->player_cards[i]];
+        char *card_face = reflect[hand->player_cards[i]-1];
         printf("%s ", card_face);
       }
       printf("\nDealer's cards: ");
       for (int i = 0; i < hand->dealer_count; i++) {
-        char *card_face = reflect[hand->dealer_cards[i]];
+        char *card_face = reflect[hand->dealer_cards[i]-1];
         printf("%s ", card_face);
       }
       printf("\n");

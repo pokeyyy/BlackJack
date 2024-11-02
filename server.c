@@ -5,41 +5,95 @@
  */
 
 #include "BlackJack.h"
+#include <time.h> 
+
+Hand now_value;
+int cards[52];
+int cards_now;
+
+void shuffle(){
+  srand(time(NULL));
+  for (int i = 0; i < 52; i++) {
+        cards[i] = (i % 13) + 1; // 1-13 代表 A 到 K
+    }
+    for (int i = 0; i < 52; i++) {
+        int j = rand() % 52;
+        int temp =cards[i];
+        cards[i] = cards[j];
+        cards[j] = temp;
+    }
+    //测试
+    for (int i = 0; i < 52; i++) {
+        printf("%d ",cards[i]);
+    }
+    printf("\n");
+    cards_now = 0;
+}
+
+int calculate_value(int value[],int num) {
+  int total = 0;
+  int aces = 0;
+
+  for (int i = 0; i < num; i++) {
+    if (value[i] > 10) {
+      total += 10;
+    } else {
+      total += value[i];
+      if (value[i] == 1) {
+        aces++; 
+      }
+    }
+  }
+
+  // 调整A的值
+  while (total <= 11 && aces > 0) {
+    total += 10; // 将 Ace 视为 11
+    aces--;
+  }
+  printf("total: %d\n",total);
+  return total;
+}
 
 struct Hand *
 start_game_1_svc(void *argp, struct svc_req *rqstp)
 {
-	static struct Hand  result;
+  Hand *start_result = (Hand *)malloc(sizeof(Hand));
+  now_value.dealer_count = now_value.player_count = 0;
+  shuffle();
 
-	/*
-	 * insert server code here
-	 */
-
-	return &result;
+  // 发两张牌给玩家和庄家
+  now_value.player_cards[now_value.player_count++] = cards[cards_now++];
+  now_value.player_cards[now_value.player_count++] = cards[cards_now++];
+  now_value.dealer_cards[now_value.dealer_count++] = cards[cards_now++];
+  now_value.dealer_cards[now_value.dealer_count++] = cards[cards_now++];
+  *start_result = now_value;
+  
+  printf("player: %d %d\n",start_result->player_cards[0],start_result->player_cards[1]);
+  printf("dealer: %d %d\n",start_result->dealer_cards[0],start_result->dealer_cards[1]);
+  return start_result;
 }
 
 struct Hand *
 hit_1_svc(void *argp, struct svc_req *rqstp)
 {
-	static struct Hand  result;
-
-	/*
-	 * insert server code here
-	 */
-
-	return &result;
+  Hand *hit_result = (Hand *)malloc(sizeof(Hand));
+	now_value.player_cards[now_value.player_count++] = cards[cards_now++];
+  *hit_result = now_value;
+  return hit_result;
 }
 
 struct Hand *
 stand_1_svc(void *argp, struct svc_req *rqstp)
 {
-	static struct Hand  result;
+	Hand *stand_result = (Hand *)malloc(sizeof(Hand));
+	// 庄家回合
+  int final_player = calculate_value(now_value.player_cards,now_value.player_count);
+  while (calculate_value(now_value.dealer_cards,now_value.dealer_count) < 17 || calculate_value(now_value.dealer_cards,now_value.dealer_count) < final_player) {
+    now_value.dealer_cards[now_value.dealer_count++] = cards[cards_now++];
+  }
+  *stand_result = now_value;
 
-	/*
-	 * insert server code here
-	 */
-
-	return &result;
+	return stand_result;
 }
 
 struct Result *
@@ -47,9 +101,8 @@ get_result_1_svc(void *argp, struct svc_req *rqstp)
 {
 	static struct Result  result;
 
-	/*
-	 * insert server code here
-	 */
+	result.player = calculate_value(now_value.player_cards,now_value.player_count);
+  result.dealer = calculate_value(now_value.dealer_cards,now_value.dealer_count);
 
 	return &result;
 }
